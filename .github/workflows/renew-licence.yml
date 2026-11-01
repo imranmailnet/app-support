@@ -1,0 +1,89 @@
+# The "Renew licence" form. Copied into the public `app-support` repository as
+# .github/workflows/renew-licence.yml, beside licences/renew.mjs (steps in docs/licence-renewal.md).
+# Only people with write access to that repository can run it.
+name: Renew licence
+# A fixed name, so the list of runs never shows which shop was renewed.
+run-name: Licence update
+
+on:
+  workflow_dispatch:
+    inputs:
+      shop:
+        description: "Shop ID (from the shop's Licence page, like ABCD-EFGH-JKMN)"
+        required: true
+        type: string
+      action:
+        description: What to do
+        required: true
+        type: choice
+        default: Renew for 1 year
+        options:
+          - Renew for 1 year
+          - Renew until the date below
+          - 7-day unlock (shop promised to pay)
+          - Change plan or limits only
+          - No end date
+      until:
+        description: 'Last day, as 2027-12-31 (only for "Renew until the date below")'
+        required: false
+        type: string
+      plan:
+        description: Plan
+        required: true
+        type: choice
+        default: keep
+        options:
+          - keep
+          - full
+          - standard
+          - basic
+      name:
+        description: Shop name (needed only the first time; empty = keep)
+        required: false
+        type: string
+      branches:
+        description: Most branches (empty = keep, 0 = no limit)
+        required: false
+        type: string
+      pos:
+        description: Most POS counters (empty = keep, 0 = no limit)
+        required: false
+        type: string
+      users:
+        description: Most users (empty = keep, 0 = no limit)
+        required: false
+        type: string
+      features:
+        description: "Extra parts: repairs, manufacturing, hr, whatsapp, vehicles, all or none (empty = keep)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+# One renewal at a time, so two never push over each other.
+concurrency:
+  group: licences
+  cancel-in-progress: false
+
+jobs:
+  renew:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Make the licence
+        # The form's boxes are read inside the script (and hidden there), never put in the log.
+        run: node licences/renew.mjs
+        env:
+          SIGNING_KEY: ${{ secrets.LICENSE_SIGNING_KEY }}
+      - name: Publish it
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add licences
+          git commit -q -m "Licence update"
+          git push -q

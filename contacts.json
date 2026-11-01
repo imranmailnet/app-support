@@ -1,0 +1,9 @@
+{
+  "phones": [
+    { "number": "+966 59 899 0388", "whatsapp": true },
+    { "number": "+966 50 968 0180", "whatsapp": true },
+    { "number": "+966 50 574 3249", "whatsapp": true }
+  ],
+  "email": "postechksa@gmail.com",
+  "website": "postech.com.sa"
+}

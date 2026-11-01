@@ -1,0 +1,2 @@
+# app-support
+License Activation

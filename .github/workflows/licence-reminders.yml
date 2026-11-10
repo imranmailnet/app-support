@@ -1,0 +1,53 @@
+# The morning reminder email. Copied into the public `app-support` repository as
+# .github/workflows/licence-reminders.yml, beside licences/reminders.mjs (steps in docs/licence-renewal.md).
+# Sends nothing until the secrets REGISTER_KEY, MAIL_USER and MAIL_PASSWORD are added.
+name: Licence reminders
+
+on:
+  schedule:
+    # 07:00 in Riyadh.
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: licences
+  cancel-in-progress: false
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Get the email sender
+        run: npm install --no-save --no-audit --no-fund nodemailer@6.9.16
+      - name: Send the reminder
+        run: node licences/reminders.mjs
+        env:
+          REGISTER_KEY: ${{ secrets.REGISTER_KEY }}
+          MAIL_USER: ${{ secrets.MAIL_USER }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+      - name: Keep the morning run switched on
+        # GitHub switches off timed runs in a repository with no new commit for 60 days; a small commit every
+        # 50 days keeps this one going.
+        run: |
+          last=$(git log -1 --format=%ct)
+          if [ $(( $(date +%s) - last )) -gt $(( 50 * 86400 )) ]; then
+            date -u +%F > licences/.awake
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add licences/.awake
+            git commit -q -m "Keep reminders on"
+            git push -q
+          fi

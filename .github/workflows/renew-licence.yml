@@ -1,6 +1,7 @@
 # The "Renew licence" form. Copied into the public `app-support` repository as
 # .github/workflows/renew-licence.yml, beside licences/renew.mjs (steps in docs/licence-renewal.md).
-# Only people with write access to that repository can run it.
+# Only people with write access to that repository can run it. The Licences page (licences/index.html) runs it
+# too, with everything locked in the `request` box.
 name: Renew licence
 # A fixed name, so the list of runs never shows which shop was renewed.
 run-name: Licence update
@@ -23,6 +24,7 @@ on:
           - 7-day unlock (shop promised to pay)
           - Change plan or limits only
           - No end date
+          - Add to list only (no change)
       until:
         description: 'Last day, as 2027-12-31 (only for "Renew until the date below")'
         required: false
@@ -57,6 +59,10 @@ on:
         description: "Extra parts: repairs, manufacturing, hr, whatsapp, vehicles, all or none (empty = keep)"
         required: false
         type: string
+      request:
+        description: "Leave empty (filled by the Licences page)"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -72,6 +78,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The newest list, also when this run waited behind another one.
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -80,10 +89,11 @@ jobs:
         run: node licences/renew.mjs
         env:
           SIGNING_KEY: ${{ secrets.LICENSE_SIGNING_KEY }}
+          REGISTER_KEY: ${{ secrets.REGISTER_KEY }}
       - name: Publish it
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add licences
-          git commit -q -m "Licence update"
+          git diff --cached --quiet || git commit -q -m "Licence update"
           git push -q

@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Licences</title>
+<!--
+  The seller's Licences page. Copied into the public `app-support` repository as licences/index.html beside
+  register.mjs, and opened from its GitHub Pages address (steps in docs/licence-renewal.md, in the app's repository).
+  The page holds no shop data: it reads licences/register.enc and opens it with the list password typed here.
+  Renewing runs the "Renew licence" form through GitHub with an access key saved on this device, the request locked
+  with the same password, so nothing about a shop is ever readable in public.
+-->
+<style>
+  :root {
+    --bg: #f3f6f5; --panel: #ffffff; --panel2: #f8faf9; --text: #1e293b; --muted: #64748b; --line: #dbe3e1;
+    --brand: #0f766e; --brand-soft: #ccfbf1; --good: #047857; --good-soft: #d1fae5; --warn: #b45309; --warn-soft: #fef3c7;
+    --bad: #b91c1c; --bad-soft: #fee2e2; --info: #1d4ed8; --info-soft: #dbeafe; --gray-soft: #e2e8f0; --shadow: 0 10px 30px rgba(15, 23, 42, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1220; --panel: #131c2e; --panel2: #0f1729; --text: #e2e8f0; --muted: #94a3b8; --line: #263247;
+      --brand: #2dd4bf; --brand-soft: #134e4a; --good: #34d399; --good-soft: #064e3b; --warn: #fbbf24; --warn-soft: #78350f;
+      --bad: #f87171; --bad-soft: #7f1d1d; --info: #93c5fd; --info-soft: #1e3a8a; --gray-soft: #334155; --shadow: 0 10px 30px rgba(0, 0, 0, .5);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  main { max-width: 1280px; margin: 0 auto; padding: 16px 16px 64px; }
+  header.top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  header.top h1 { font-size: 20px; margin: 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .btn:hover { border-color: var(--brand); }
+  .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #042f2e; } }
+  .btn.danger { color: var(--bad); }
+  .btn.small { padding: 4px 10px; font-size: 12px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .tile { padding: 12px 14px; cursor: pointer; text-align: start; }
+  .tile b { display: block; font-size: 22px; line-height: 1.2; }
+  .tile span { color: var(--muted); font-size: 12px; }
+  .tile.on { outline: 2px solid var(--brand); }
+  .tile.warn b { color: var(--warn); } .tile.bad b { color: var(--bad); } .tile.good b { color: var(--good); } .tile.info b { color: var(--info); }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; margin-bottom: 10px; }
+  .bar input[type=search] { flex: 1 1 240px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
+  .bar select { padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
+  .table-box { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px 10px; text-align: start; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--panel2); position: sticky; top: 0; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--panel2); }
+  td.num, th.num { text-align: end; font-variant-numeric: tabular-nums; }
+  .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .s-active { background: var(--good-soft); color: var(--good); }
+  .s-noEnd { background: var(--info-soft); color: var(--info); }
+  .s-ending { background: var(--warn-soft); color: var(--warn); }
+  .s-grace, .s-limited { background: var(--bad-soft); color: var(--bad); }
+  .s-stopped { background: var(--gray-soft); color: var(--text); }
+  .s-unlocked { background: var(--info-soft); color: var(--info); }
+  .days-bad { color: var(--bad); font-weight: 700; } .days-warn { color: var(--warn); font-weight: 700; }
+  .empty { padding: 40px 16px; text-align: center; color: var(--muted); }
+  .center { max-width: 420px; margin: 10vh auto 0; padding: 24px; }
+  .center h1 { font-size: 20px; margin: 0 0 6px; }
+  label.f { display: block; font-size: 12px; color: var(--muted); margin-top: 10px; }
+  label.f input, label.f select, label.f textarea { display: block; width: 100%; margin-top: 3px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
+  label.f textarea { min-height: 60px; resize: vertical; }
+  .check { display: inline-flex; gap: 6px; align-items: center; margin: 8px 14px 0 0; font-size: 13px; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 12px; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0 12px; }
+  .error { color: var(--bad); margin-top: 10px; white-space: pre-wrap; }
+  .ok { color: var(--good); margin-top: 10px; }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 4px 12px 12px; margin: 14px 0 0; }
+  legend { font-size: 12px; font-weight: 700; color: var(--muted); padding: 0 6px; }
+  /* Drawer and dialogs */
+  .shade { position: fixed; inset: 0; background: rgba(15, 23, 42, .45); z-index: 10; }
+  .drawer { position: fixed; top: 0; bottom: 0; inset-inline-end: 0; width: min(560px, 100%); background: var(--panel); z-index: 11; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+  .drawer .head { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+  .drawer .head h2 { margin: 0; font-size: 18px; }
+  .drawer .body { padding: 14px 16px 40px; overflow-y: auto; flex: 1; }
+  .dialog { position: fixed; z-index: 21; inset: 0; display: grid; place-items: center; padding: 16px; pointer-events: none; }
+  .dialog > .panel { pointer-events: auto; width: min(640px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; padding: 18px; box-shadow: var(--shadow); }
+  .dialog h2 { margin: 0 0 4px; font-size: 18px; }
+  .dialog .foot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .shade.top { z-index: 20; }
+  dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 12px 0; }
+  dl.facts dt { color: var(--muted); font-size: 12px; padding-top: 1px; }
+  dl.facts dd { margin: 0; overflow-wrap: anywhere; }
+  .code-box { margin-top: 6px; padding: 8px 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; word-break: break-all; max-height: 90px; overflow: auto; }
+  h3 { font-size: 14px; margin: 18px 0 6px; }
+  .history td, .history th { padding: 6px 8px; font-size: 12px; }
+  .history tbody tr { cursor: default; }
+  .steps { list-style: none; padding: 0; margin: 12px 0 0; }
+  .steps li { padding: 4px 0; }
+  .steps li::before { content: "○ "; color: var(--muted); }
+  .steps li.done::before { content: "✓ "; color: var(--good); }
+  .steps li.now::before { content: "… "; color: var(--brand); }
+  .steps li.fail::before { content: "✕ "; color: var(--bad); }
+  .toast { position: fixed; bottom: 16px; inset-inline-start: 50%; transform: translateX(-50%); background: var(--text); color: var(--panel); padding: 8px 16px; border-radius: 8px; z-index: 40; }
+  .hide-narrow { }
+  @media (max-width: 760px) {
+    .hide-narrow { display: none; }
+    th, td { padding: 8px 6px; }
+  }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script type="module">
+import { emptyRegister, lockWith, openWith, REQUEST_PREFIX, saudiToday, shopState, STATE_WORDS, daysBetween, lastPayment, shopIdText, addDays } from './register.mjs';
+
+// ---------------------------------------------------------------- Settings kept on this device
+
+const store = {
+  get(k) { try { return localStorage.getItem(k) ?? sessionStorage.getItem(k); } catch { return null; } },
+  set(k, v, remember) {
+    try {
+      localStorage.removeItem(k); sessionStorage.removeItem(k);
+      if (v != null) (remember ? localStorage : sessionStorage).setItem(k, v);
+    } catch { /* storage blocked: kept for this visit only */ }
+  },
+};
+
+const params = new URLSearchParams(location.search);
+const REPO = (() => {
+  if (params.get('repo')) { const [owner, repo] = params.get('repo').split('/'); return { owner, repo }; }
+  if (location.hostname.endsWith('.github.io')) return { owner: location.hostname.split('.')[0], repo: location.pathname.split('/')[1] };
+  return { owner: 'imranmailnet', repo: 'app-support' };
+})();
+const API = `https://api.github.com/repos/${REPO.owner}/${REPO.repo}`;
+const RAW = `https://raw.githubusercontent.com/${REPO.owner}/${REPO.repo}/main/`;
+const WORKFLOW = 'renew-licence.yml';
+const PLANS = ['full', 'standard', 'basic'];
+const FEATURES = ['repairs', 'manufacturing', 'hr', 'whatsapp', 'vehicles'];
+const FEATURE_WORDS = { repairs: 'Repair jobs', manufacturing: 'Manufacturing', hr: 'HR and payroll', whatsapp: 'WhatsApp', vehicles: 'Vehicles' };
+
+const state = {
+  password: store.get('licences.password'),
+  token: store.get('licences.token'),
+  register: null,
+  filter: 'all',
+  search: '',
+  sort: 'days',
+  open: null, // the Shop ID shown in the drawer
+  running: false,
+};
+
+// ---------------------------------------------------------------- Small helpers
+
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const today = () => saudiToday();
+const cleanCode = (t) => String(t ?? '').toUpperCase().replace(/O/g, '0').replace(/[IL]/g, '1').replace(/[^0-9A-Z]/g, '');
+const LETTERS = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const money = (n) => (n == null ? '' : Number(n).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+const dmy = (d) => (d ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}` : '');
+const limitText = (n) => (n == null ? '∞' : String(n));
+function toast(text) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = text;
+  document.body.append(el);
+  setTimeout(() => el.remove(), 2500);
+}
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); toast('Copied'); } catch { prompt('Copy this:', text); }
+}
+const shops = () => Object.values(state.register?.shops ?? {});
+const shopById = (code) => state.register?.shops?.[code] ?? null;
+const paidIn = (shop, from, to) => (shop.history ?? []).filter((h) => h.amount != null && h.paidOn >= from && h.paidOn <= to).reduce((s, h) => s + h.amount, 0);
+
+/** A Saudi mobile number as WhatsApp wants it: 9665… */
+function waNumber(phone) {
+  let d = String(phone ?? '').replace(/[٠-٩]/g, (c) => '٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/\D/g, '');
+  if (d.startsWith('00')) d = d.slice(2);
+  if (d.startsWith('05') && d.length === 10) d = `966${d.slice(1)}`;
+  else if (d.startsWith('5') && d.length === 9) d = `966${d}`;
+  return d;
+}
+const openWhatsApp = (phone, text) => window.open(`https://wa.me/${waNumber(phone)}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+
+function reminderText(shop) {
+  const s = shopState(shop, today());
+  const d = dmy(shop.expires);
+  if (s.daysLeft >= 0) {
+    return `السلام عليكم ${shop.name}،\nنود تذكيركم بأن الاتفاقية السنوية للبرنامج تنتهي في ${d} (بعد ${s.daysLeft} يوم). للتجديد يرجى التواصل معنا.\nشكراً لكم.\n\nHello ${shop.name},\nA reminder that your yearly agreement for the app ends on ${d} (${s.daysLeft} days left). Please contact us to renew.\nThank you.`;
+  }
+  return `السلام عليكم ${shop.name}،\nانتهت الاتفاقية السنوية للبرنامج في ${d}، وبعض أجزاء البرنامج مقفلة أو ستقفل قريباً. للتجديد يرجى التواصل معنا.\nشكراً لكم.\n\nHello ${shop.name},\nYour yearly agreement for the app ended on ${d}, and parts of the app are locked or will lock soon. Please contact us to renew.\nThank you.`;
+}
+function codeText(shop) {
+  return `السلام عليكم ${shop.name}،\nتم تجديد الترخيص. البرنامج يأخذه بنفسه خلال ساعات إذا كان متصلاً بالإنترنت، أو اضغط "تحقق الآن" في صفحة الترخيص.\nبدون إنترنت: انسخ الرمز التالي والصقه في صفحة الترخيص ثم اضغط حفظ.\n\nHello ${shop.name},\nYour licence has been renewed. The app picks it up by itself within a few hours, or press "Check now" on the Licence page.\nWithout internet: paste this code on the Licence page and press Save code.\n\n${shop.offlineCode}`;
+}
+
+// ---------------------------------------------------------------- GitHub
+
+async function gh(path, opts = {}) {
+  const res = await fetch(path.startsWith('http') ? path : API + path, {
+    ...opts,
+    headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(state.token ? { Authorization: `Bearer ${state.token}` } : {}), ...(opts.headers ?? {}) },
+    cache: 'no-store',
+  });
+  return res;
+}
+
+/** Reads the locked list: through the API with the access key (always the newest), else the public file. */
+async function readRegisterText() {
+  let res;
+  if (state.token) res = await gh('/contents/licences/register.enc?ref=main', { headers: { Accept: 'application/vnd.github.raw+json' } });
+  if (!res || res.status === 401 || res.status === 403) res = await fetch(`${RAW}licences/register.enc?t=${Date.now()}`, { cache: 'no-store' });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`GitHub answered ${res.status}. Check the internet connection and try again.`);
+  return res.text();
+}
+
+async function loadRegister(password = state.password) {
+  const text = await readRegisterText();
+  if (text == null) return emptyRegister();
+  const opened = await openWith(password, text);
+  if (!opened) throw new Error('Wrong password. Type the list password (the same as the REGISTER_KEY secret).');
+  return opened;
+}
+
+let me = null;
+async function whoAmI() {
+  if (me) return me;
+  const res = await gh('https://api.github.com/user');
+  if (!res.ok) throw new Error('The GitHub access key does not work. Open Settings and paste a new one.');
+  me = (await res.json()).login;
+  return me;
+}
+
+async function annotations(runId) {
+  try {
+    const jobs = await (await gh(`/actions/runs/${runId}/jobs`)).json();
+    const out = [];
+    for (const job of jobs.jobs ?? []) {
+      const list = await (await gh(`/check-runs/${job.id}/annotations`)).json();
+      for (const a of Array.isArray(list) ? list : []) if (a.annotation_level === 'failure' && !/exit code/.test(a.message)) out.push(a.message);
+    }
+    return out.join('\n');
+  } catch {
+    return '';
+  }
+}
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Runs the "Renew licence" form with a locked request and waits for it. `step(i, how)` shows progress.
+ * Returns the shop as the list then holds it.
+ */
+async function runForm(request, step) {
+  const login = await whoAmI();
+  const rid = crypto.randomUUID();
+  const sealed = await lockWith(state.password, { ...request, rid }, REQUEST_PREFIX);
+  step(0, 'now');
+  const started = Date.now();
+  const res = await gh(`/actions/workflows/${WORKFLOW}/dispatches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: 'main', inputs: { shop: '-', action: 'Renew for 1 year', plan: 'keep', request: sealed } }),
+  });
+  if (res.status === 404 || res.status === 403) throw new Error('GitHub refused to run the form. The access key needs "Actions: Read and write" on the support repository (Settings on this page shows how).');
+  if (!res.ok) throw new Error(`GitHub answered ${res.status} when starting the form.`);
+  step(0, 'done');
+  step(1, 'now');
+  let run = null;
+  for (let i = 0; i < 90; i++) {
+    await wait(i < 10 ? 2000 : 4000);
+    const list = await (await gh(`/actions/workflows/${WORKFLOW}/runs?event=workflow_dispatch&per_page=10`)).json();
+    const mine = (list.workflow_runs ?? []).filter((r) => r.actor?.login === login && Date.parse(r.created_at) >= started - 15_000).sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+    run = mine[0] ?? null;
+    if (run?.status === 'completed') break;
+    if (run) step(1, 'now', run.status === 'queued' ? 'Waiting for GitHub to start it…' : 'Running…');
+  }
+  if (!run || run.status !== 'completed') throw new Error('GitHub has not finished yet. Press Refresh in a minute to see the result.');
+  if (run.conclusion !== 'success') {
+    step(1, 'fail');
+    const why = await annotations(run.id);
+    if (run.conclusion === 'cancelled') throw new Error('GitHub cancelled this run because another one was waiting. Please do it again.');
+    throw new Error(why || `The form stopped (${run.conclusion}). Open the run on GitHub to see why: ${run.html_url}`);
+  }
+  step(1, 'done');
+  step(2, 'now');
+  for (let i = 0; i < 5; i++) {
+    state.register = await loadRegister();
+    const shop = shopById(request.inputs.shop);
+    if (shop?.history?.some((h) => h.rid === rid)) {
+      step(2, 'done');
+      return shop;
+    }
+    await wait(3000);
+  }
+  throw new Error('It was done, but the list has not caught up yet. Press Refresh in a minute.');
+}
+
+// ---------------------------------------------------------------- Screens
+
+function render() {
+  const app = $('#app');
+  if (!state.register) return renderLock(app);
+  const t = today();
+  const all = shops();
+  const live = all.filter((s) => !s.archived);
+  const withState = live.map((s) => ({ shop: s, ...shopState(s, t) }));
+  const count = (pred) => withState.filter(pred).length;
+  const monthFrom = `${t.slice(0, 7)}-01`;
+  const yearFrom = `${t.slice(0, 4)}-01-01`;
+  const paidMonth = live.reduce((s, x) => s + paidIn(x, monthFrom, t), 0);
+  const paidYear = live.reduce((s, x) => s + paidIn(x, yearFrom, t), 0);
+  const dueSoon = withState.filter((r) => r.daysLeft != null && r.daysLeft >= 0 && r.daysLeft < 30);
+  const dueSoonMoney = dueSoon.reduce((s, r) => s + (lastPayment(r.shop)?.amount ?? 0), 0);
+  const tiles = [
+    ['all', 'Shops', live.length, ''],
+    ['active', 'Active', count((r) => r.state === 'active' || r.state === 'noEnd'), 'good'],
+    ['ending', 'Ending in 30 days', count((r) => r.state === 'ending'), 'warn'],
+    ['ended', 'Ended', count((r) => r.state === 'grace' || r.state === 'limited'), 'bad'],
+    ['stopped', 'Stopped', count((r) => r.state === 'stopped'), ''],
+    ['unlocked', '7-day unlocks running', count((r) => r.state === 'unlocked'), 'info'],
+  ];
+  app.innerHTML = `
+    <header class="top">
+      <div><h1>Licences</h1><div class="muted small">${esc(REPO.owner)}/${esc(REPO.repo)} · list saved ${state.register.updated ? esc(new Date(state.register.updated).toLocaleString('en-GB')) : 'never'}</div></div>
+      <div class="actions">
+        <button class="btn primary" data-act="add">＋ Add shop</button>
+        <button class="btn" data-act="refresh">↻ Refresh</button>
+        <button class="btn" data-act="excel">⬇ Excel</button>
+        <button class="btn" data-act="settings">⚙ Settings</button>
+        <button class="btn" data-act="lock">🔒 Lock</button>
+      </div>
+    </header>
+    ${state.token ? '' : `<div class="panel bar"><span>To renew from this page, save a GitHub access key on this device.</span><button class="btn small primary" data-act="settings">Set it up</button></div>`}
+    <div class="tiles">
+      ${tiles.map(([k, label, n, tone]) => `<button class="panel tile ${tone} ${state.filter === k ? 'on' : ''}" data-filter="${k}"><b>${n}</b><span>${label}</span></button>`).join('')}
+      <div class="panel tile" style="cursor:default"><b>${money(paidMonth)}</b><span>Paid this month</span></div>
+      <div class="panel tile" style="cursor:default"><b>${money(paidYear)}</b><span>Paid this year</span></div>
+      <div class="panel tile" style="cursor:default"><b>${money(dueSoonMoney)}</b><span title="At the price each shop paid last time">Due in 30 days · ${dueSoon.length} shop${dueSoon.length === 1 ? '' : 's'}</span></div>
+    </div>
+    <div class="panel bar">
+      <input type="search" id="search" placeholder="Search name, Shop ID, VAT number, phone, city or notes" value="${esc(state.search)}">
+      <select id="filter" aria-label="Show">
+        ${[['all', 'All shops'], ['active', 'Active'], ['ending', 'Ending in 30 days'], ['ended', 'Ended (grace or locked)'], ['stopped', 'Stopped'], ['unlocked', '7-day unlock running'], ['noEnd', 'No end date'], ['archived', 'Archived']].map(([k, l]) => `<option value="${k}" ${state.filter === k ? 'selected' : ''}>${l}</option>`).join('')}
+      </select>
+      <select id="sort" aria-label="Sort">
+        ${[['days', 'Sort: days left'], ['name', 'Sort: name'], ['paid', 'Sort: last paid'], ['added', 'Sort: newest added']].map(([k, l]) => `<option value="${k}" ${state.sort === k ? 'selected' : ''}>${l}</option>`).join('')}
+      </select>
+    </div>
+    <div class="panel table-box" id="list"></div>`;
+  renderList();
+  if (state.open && shopById(state.open)) renderDrawer(state.open);
+}
+
+function filtered() {
+  const t = today();
+  const q = state.search.trim().toLowerCase();
+  const qCode = cleanCode(q);
+  let rows = shops().map((s) => ({ shop: s, ...shopState(s, t) }));
+  rows = rows.filter((r) => (state.filter === 'archived' ? r.shop.archived : !r.shop.archived));
+  const f = state.filter;
+  if (f === 'active') rows = rows.filter((r) => r.state === 'active' || r.state === 'noEnd');
+  else if (f === 'ended') rows = rows.filter((r) => r.state === 'grace' || r.state === 'limited');
+  else if (!['all', 'archived'].includes(f)) rows = rows.filter((r) => r.state === f);
+  if (q) {
+    rows = rows.filter(({ shop }) =>
+      [shop.name, shop.vat, shop.contact, shop.phone, shop.city, shop.notes].some((v) => String(v ?? '').toLowerCase().includes(q)) ||
+      (qCode.length >= 3 && shop.code.includes(qCode)) ||
+      (q.replace(/\D/g, '').length >= 4 && String(shop.phone ?? '').replace(/\D/g, '').includes(q.replace(/\D/g, ''))));
+  }
+  const by = {
+    days: (a, b) => (a.daysLeft ?? 1e9) - (b.daysLeft ?? 1e9),
+    name: (a, b) => String(a.shop.name).localeCompare(String(b.shop.name)),
+    paid: (a, b) => String(lastPayment(b.shop)?.paidOn ?? '').localeCompare(String(lastPayment(a.shop)?.paidOn ?? '')),
+    added: (a, b) => String(b.shop.addedAt ?? '').localeCompare(String(a.shop.addedAt ?? '')),
+  };
+  return rows.sort(by[state.sort] ?? by.days);
+}
+
+function daysCell(r) {
+  if (r.daysLeft == null) return '—';
+  const cls = r.daysLeft < 0 ? 'days-bad' : r.daysLeft < 30 ? 'days-warn' : '';
+  return `<span class="${cls}">${r.daysLeft}</span>`;
+}
+
+function renderList() {
+  const box = $('#list');
+  if (!box) return;
+  const rows = filtered();
+  if (!shops().length) {
+    box.innerHTML = `<div class="empty"><p>No shops on the list yet.</p><p class="small">Press <b>＋ Add shop</b> for a new shop, or choose <b>Add a shop renewed before</b> there to bring in the shops you renewed earlier.</p></div>`;
+    return;
+  }
+  if (!rows.length) {
+    box.innerHTML = `<div class="empty">Nothing matches.</div>`;
+    return;
+  }
+  box.innerHTML = `<table>
+    <thead><tr><th>Shop</th><th class="hide-narrow">Shop ID</th><th class="hide-narrow">Phone</th><th class="hide-narrow">Plan</th><th class="hide-narrow">Branches / POS / users</th><th>Last day</th><th class="num">Days left</th><th>State</th><th class="hide-narrow num">Last paid</th><th></th></tr></thead>
+    <tbody>${rows
+      .map((r) => {
+        const s = r.shop;
+        const paid = lastPayment(s);
+        return `<tr data-open="${s.code}">
+          <td><b>${esc(s.name)}</b>${s.city ? `<div class="muted small">${esc(s.city)}</div>` : ''}${s.vat ? `<div class="muted small mono">VAT ${esc(s.vat)}</div>` : ''}</td>
+          <td class="hide-narrow mono">${esc(shopIdText(s.code))}</td>
+          <td class="hide-narrow">${esc(s.phone)}</td>
+          <td class="hide-narrow">${esc(s.plan ?? '')}</td>
+          <td class="hide-narrow">${limitText(s.branches)} / ${limitText(s.pos)} / ${limitText(s.users)}</td>
+          <td>${s.expires ? dmy(s.expires) : '—'}</td>
+          <td class="num">${daysCell(r)}</td>
+          <td><span class="badge s-${r.state}">${esc(STATE_WORDS[r.state])}</span>${s.unlocks ? `<div class="muted small">${s.unlocks} unlock${s.unlocks > 1 ? 's' : ''}</div>` : ''}</td>
+          <td class="hide-narrow num">${paid ? `${money(paid.amount)}<div class="muted small">${dmy(paid.paidOn)}</div>` : ''}</td>
+          <td><button class="btn small" data-renew="${s.code}">Renew</button></td>
+        </tr>`;
+      })
+      .join('')}</tbody></table>`;
+}
+
+function renderLock(app) {
+  app.innerHTML = `
+    <div class="panel center">
+      <h1>Licences</h1>
+      <p class="muted">Type the list password to open the list of shops. It is the same as the <span class="mono">REGISTER_KEY</span> secret on GitHub.</p>
+      <form id="unlock">
+        <label class="f">List password<input id="password" type="password" autocomplete="current-password" required></label>
+        <label class="check"><input id="remember" type="checkbox"> Remember on this device</label>
+        <div class="foot actions" style="margin-top:14px"><button class="btn primary" type="submit">Open</button></div>
+        <div id="lock-error" class="error" hidden></div>
+      </form>
+      <p class="muted small" style="margin-top:16px">The list is kept locked in the public support repository, so nobody can read it without this password. Only tick "Remember" on your own computer or phone.</p>
+    </div>`;
+  $('#password').focus();
+  $('#unlock').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pw = $('#password').value;
+    const err = $('#lock-error');
+    err.hidden = true;
+    const btn = e.submitter ?? $('#unlock button');
+    btn.disabled = true;
+    btn.textContent = 'Opening…';
+    try {
+      state.register = await loadRegister(pw);
+      state.password = pw;
+      store.set('licences.password', pw, $('#remember').checked);
+      render();
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.hidden = false;
+      btn.disabled = false;
+      btn.textContent = 'Open';
+    }
+  });
+}
+
+// ---------------------------------------------------------------- The shop drawer
+
+function closeDrawer() {
+  state.open = null;
+  document.querySelectorAll('.drawer, .shade.drawer-shade').forEach((el) => el.remove());
+}
+
+function renderDrawer(code) {
+  closeDrawer();
+  const shop = shopById(code);
+  if (!shop) return;
+  state.open = code;
+  const t = today();
+  const s = shopState(shop, t);
+  const shade = document.createElement('div');
+  shade.className = 'shade drawer-shade';
+  shade.addEventListener('click', closeDrawer);
+  const d = document.createElement('aside');
+  d.className = 'drawer';
+  d.setAttribute('role', 'dialog');
+  const paidYear = paidIn(shop, `${t.slice(0, 4)}-01-01`, t);
+  const nextWords = s.state === 'grace' ? `Locks on ${dmy(s.nextDate)}` : s.state === 'limited' ? `Stops on ${dmy(s.nextDate)}` : s.state === 'unlocked' ? `Unlock ends ${dmy(shop.unlockUntil)}` : '';
+  d.innerHTML = `
+    <div class="head">
+      <div><h2>${esc(shop.name)}</h2><div class="muted small mono">${esc(shopIdText(shop.code))}</div>
+        <div style="margin-top:6px"><span class="badge s-${s.state}">${esc(STATE_WORDS[s.state])}</span> ${s.daysLeft != null ? `<span class="small ${s.daysLeft < 0 ? 'days-bad' : s.daysLeft < 30 ? 'days-warn' : ''}">${s.daysLeft >= 0 ? `${s.daysLeft} days left` : `ended ${-s.daysLeft} days ago`}</span>` : ''} <span class="muted small">${esc(nextWords)}</span></div>
+      </div>
+      <button class="btn small" data-act="close" aria-label="Close">✕</button>
+    </div>
+    <div class="body">
+      <div class="actions">
+        <button class="btn primary" data-do="Renew for 1 year">Renew 1 year</button>
+        <button class="btn" data-do="Renew until the date below">Until a date</button>
+        <button class="btn" data-do="7-day unlock (shop promised to pay)">7-day unlock</button>
+        <button class="btn" data-do="Change plan or limits only">Plan / limits</button>
+        <button class="btn" data-do="Record payment only">Record payment</button>
+        <button class="btn" data-do="Edit details only">Edit details</button>
+      </div>
+      <div class="actions" style="margin-top:8px">
+        <button class="btn small" data-act="wa-remind" ${shop.phone ? '' : 'disabled title="Add a phone number first"'}>WhatsApp reminder</button>
+        <button class="btn small" data-act="wa-code" ${shop.phone && shop.offlineCode ? '' : 'disabled'}>WhatsApp the licence code</button>
+        <button class="btn small" data-act="copy-id">Copy Shop ID</button>
+      </div>
+      <dl class="facts">
+        <dt>Last day</dt><dd>${shop.expires ? dmy(shop.expires) : 'No end date'}</dd>
+        <dt>Plan</dt><dd>${esc(shop.plan ?? '')}</dd>
+        <dt>Limits</dt><dd>Branches ${limitText(shop.branches)} · POS counters ${limitText(shop.pos)} · Users ${limitText(shop.users)}</dd>
+        <dt>Extra parts</dt><dd>${(shop.features ?? []).length ? shop.features.map((f) => esc(FEATURE_WORDS[f] ?? f)).join(', ') : 'None'}</dd>
+        <dt>VAT number</dt><dd class="mono">${esc(shop.vat) || '—'}</dd>
+        <dt>Contact</dt><dd>${esc(shop.contact) || '—'}</dd>
+        <dt>Phone</dt><dd>${esc(shop.phone) || '—'}</dd>
+        <dt>City</dt><dd>${esc(shop.city) || '—'}</dd>
+        <dt>Notes</dt><dd style="white-space:pre-wrap">${esc(shop.notes) || '—'}</dd>
+        <dt>7-day unlocks</dt><dd>${shop.unlocks ?? 0}${shop.unlockUntil ? ` (last until ${dmy(shop.unlockUntil)})` : ''}</dd>
+        <dt>Paid this year</dt><dd>${money(paidYear)}</dd>
+        <dt>Licence key</dt><dd class="mono">${esc(shop.keyNo ?? '—')}${shop.issued ? ` · made ${dmy(shop.issued)}` : ''}</dd>
+        <dt>On the list since</dt><dd>${shop.addedAt ? dmy(shop.addedAt.slice(0, 10)) : ''}</dd>
+      </dl>
+      ${shop.offlineCode ? `<h3>Licence code for a shop without internet</h3><div class="code-box mono">${esc(shop.offlineCode)}</div><button class="btn small" style="margin-top:6px" data-act="copy-code">Copy code</button>` : ''}
+      <h3>History</h3>
+      <div class="table-box"><table class="history"><thead><tr><th>Date</th><th>What</th><th class="num">Paid</th><th>By</th></tr></thead><tbody>
+        ${[...(shop.history ?? [])].reverse().map((h) => `<tr><td>${dmy(h.at.slice(0, 10))}</td><td><b>${esc(h.action)}</b>${h.text ? `<div class="muted">${esc(h.text)}</div>` : ''}${h.receipt || h.note ? `<div class="muted">${esc([h.receipt && `Receipt ${h.receipt}`, h.note].filter(Boolean).join(' · '))}</div>` : ''}</td><td class="num">${h.amount != null ? `${money(h.amount)}<div class="muted">${dmy(h.paidOn)}</div>` : ''}</td><td>${esc(h.by ?? '')}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Nothing yet.</td></tr>'}
+      </tbody></table></div>
+      <div class="actions" style="margin-top:18px">
+        <button class="btn small ${shop.archived ? '' : 'danger'}" data-act="archive">${shop.archived ? 'Bring back to the list' : 'Archive (shop left)'}</button>
+      </div>
+    </div>`;
+  d.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.do) return openAction(code, b.dataset.do);
+    const act = b.dataset.act;
+    if (act === 'close') closeDrawer();
+    else if (act === 'wa-remind') openWhatsApp(shop.phone, reminderText(shop));
+    else if (act === 'wa-code') openWhatsApp(shop.phone, codeText(shop));
+    else if (act === 'copy-id') copy(shopIdText(shop.code));
+    else if (act === 'copy-code') copy(shop.offlineCode);
+    else if (act === 'archive') openAction(code, 'Edit details only', { archived: !shop.archived });
+  });
+  document.body.append(shade, d);
+}
+
+// ---------------------------------------------------------------- The action window (renew, add, details, payment)
+
+const ACTION_TITLES = {
+  'Renew for 1 year': 'Renew for 1 year',
+  'Renew until the date below': 'Renew until a date',
+  '7-day unlock (shop promised to pay)': '7-day unlock',
+  'Change plan or limits only': 'Change plan or limits',
+  'No end date': 'No end date',
+  'Record payment only': 'Record a payment',
+  'Edit details only': 'Edit details',
+  'Add to list only (no change)': 'Add a shop renewed before',
+};
+const CHANGES_LICENCE = (a) => !['Record payment only', 'Edit details only', 'Add to list only (no change)'].includes(a);
+const TAKES_TERMS = (a) => ['Renew for 1 year', 'Renew until the date below', 'Change plan or limits only', 'No end date'].includes(a);
+
+function closeDialog() {
+  document.querySelectorAll('.dialog, .shade.top').forEach((el) => el.remove());
+}
+
+/** `code` null = a new shop. */
+function openAction(code, action, preset = {}) {
+  if (!state.token) return openSettings('To do this from the page, save a GitHub access key first.');
+  closeDialog();
+  const shop = code ? shopById(code) : null;
+  const isNew = !shop;
+  const t = today();
+  const v = (f, dflt = '') => esc(shop?.[f] ?? dflt);
+  const limit = (f) => (shop ? (shop[f] == null ? '' : shop[f]) : '');
+  const features = shop?.features ?? FEATURES;
+  const shade = document.createElement('div');
+  shade.className = 'shade top';
+  const box = document.createElement('div');
+  box.className = 'dialog';
+  const nextYearEnd = (() => {
+    const start = shop?.expires && shop.expires >= t ? addDays(shop.expires, 1) : t;
+    const d = new Date(`${start}T00:00:00Z`);
+    d.setUTCFullYear(d.getUTCFullYear() + 1);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  })();
+  box.innerHTML = `<form class="panel" id="action-form" novalidate>
+    <h2>${isNew ? 'Add a shop' : `${esc(ACTION_TITLES[action] ?? action)}: ${esc(shop.name)}`}</h2>
+    ${isNew ? `
+      <label class="f">What to do<select id="a-action">
+        <option value="Renew for 1 year">New licence for 1 year</option>
+        <option value="Renew until the date below">New licence until a date</option>
+        <option value="No end date">New licence with no end date</option>
+        <option value="Add to list only (no change)">Add a shop renewed before (licence stays as it is)</option>
+      </select></label>
+      <label class="f">Shop ID (from the shop's Licence page)<input id="a-shop" class="mono" placeholder="ABCD-EFGH-JKMN" autocomplete="off" required></label>` : ''}
+    <div id="a-explain" class="muted small" style="margin-top:8px"></div>
+    <label class="f" id="w-until">Last day<input id="a-until" type="date" value="${esc(shop?.expires && shop.expires >= t ? shop.expires : nextYearEnd)}"></label>
+    <fieldset id="w-terms"><legend>Plan and limits</legend>
+      <div class="grid3">
+        <label class="f">Plan<select id="a-plan">${PLANS.map((p) => `<option ${(shop?.plan ?? 'full') === p ? 'selected' : ''}>${p}</option>`).join('')}</select></label>
+        <label class="f">Branches<input id="a-branches" type="number" min="0" placeholder="no limit" value="${limit('branches')}"></label>
+        <label class="f">POS counters<input id="a-pos" type="number" min="0" placeholder="no limit" value="${limit('pos')}"></label>
+        <label class="f">Users<input id="a-users" type="number" min="0" placeholder="no limit" value="${limit('users')}"></label>
+      </div>
+      <div>${FEATURES.map((f) => `<label class="check"><input type="checkbox" name="feature" value="${f}" ${features.includes(f) ? 'checked' : ''}> ${FEATURE_WORDS[f]}</label>`).join('')}</div>
+      <div class="muted small" style="margin-top:6px">Empty = no limit. Standard has no quotations, purchase orders or promotions; basic also has no accounting, financial reports, print designs or installment companies.</div>
+    </fieldset>
+    <fieldset id="w-details"><legend>Shop details</legend>
+      <label class="f">Shop name (printed in the licence)<input id="a-name" value="${v('name')}" required></label>
+      <div class="grid2">
+        <label class="f">VAT number<input id="a-vat" value="${v('vat')}" inputmode="numeric"></label>
+        <label class="f">Contact person<input id="a-contact" value="${v('contact')}"></label>
+        <label class="f">Phone (WhatsApp)<input id="a-phone" value="${v('phone')}" inputmode="tel" placeholder="05xxxxxxxx"></label>
+        <label class="f">City<input id="a-city" value="${v('city')}"></label>
+      </div>
+      <label class="f">Notes<textarea id="a-notes">${v('notes')}</textarea></label>
+    </fieldset>
+    <fieldset id="w-pay"><legend>Payment (optional)</legend>
+      <div class="grid2">
+        <label class="f">Amount paid<input id="a-amount" type="number" min="0" step="0.01" inputmode="decimal"></label>
+        <label class="f">Paid on<input id="a-paidOn" type="date" value="${t}"></label>
+        <label class="f">Receipt or invoice number<input id="a-receipt"></label>
+        <label class="f">Note<input id="a-payNote"></label>
+      </div>
+    </fieldset>
+    <ul class="steps" id="a-steps" hidden><li>Send to GitHub</li><li>Make the licence</li><li>Read the list again</li></ul>
+    <div id="a-error" class="error" hidden></div>
+    <div id="a-done" hidden></div>
+    <div class="foot"><button type="button" class="btn" data-act="cancel">Cancel</button><button type="submit" class="btn primary" id="a-go">Do it</button></div>
+  </form>`;
+  document.body.append(shade, box);
+  const form = $('#action-form', box);
+  const getAction = () => (isNew ? $('#a-action', box).value : action);
+  const explain = {
+    'Renew for 1 year': () => `New last day: ${dmy(nextYearEnd)}. Renewing early adds the year after the current last day, so the shop loses no days.`,
+    'Renew until the date below': () => 'The new last day can be earlier than now too (to shorten it), but not before today. A shop with no internet keeps an offline code until its own date.',
+    '7-day unlock (shop promised to pay)': () => `Opens everything until ${dmy(addDays(t, 7))}. The licence stays as it is.${shop?.unlocks ? ` This shop has had ${shop.unlocks} unlock${shop.unlocks > 1 ? 's' : ''} before.` : ''}`,
+    'Change plan or limits only': () => 'The last day stays the same.',
+    'No end date': () => 'The licence never ends.',
+    'Record payment only': () => 'Notes a payment in the history. The licence stays as it is.',
+    'Edit details only': () => 'Changes the details on the list. The licence stays as it is (the name printed in it changes at the next renewal).',
+    'Add to list only (no change)': () => 'Reads the shop\'s current online licence with its Shop ID and adds it to the list. The licence stays as it is. Type the name only for a shop whose key was made with the key maker.',
+  };
+  const layout = () => {
+    const a = getAction();
+    $('#a-explain', box).textContent = explain[a]?.() ?? '';
+    $('#w-until', box).hidden = a !== 'Renew until the date below';
+    $('#w-terms', box).hidden = !TAKES_TERMS(a);
+    $('#w-details', box).hidden = !(isNew || a === 'Edit details only');
+    $('#w-pay', box).hidden = !(a !== 'Edit details only');
+    $('#a-name', box).required = !(isNew && a === 'Add to list only (no change)');
+    if (preset.archived !== undefined) {
+      $('#w-details', box).hidden = true;
+      $('#a-explain', box).textContent = preset.archived ? 'Moves the shop to Archived. Its licence stays as it is.' : 'Brings the shop back to the list.';
+    }
+  };
+  layout();
+  if (isNew) $('#a-action', box).addEventListener('change', layout);
+  (isNew ? $('#a-shop', box) : $('#w-pay', box).hidden ? $('#a-name', box) : $('#a-amount', box))?.focus();
+  const close = () => { if (!state.running) closeDialog(); };
+  shade.addEventListener('click', close);
+  box.querySelector('[data-act=cancel]').addEventListener('click', close);
+  box.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (state.running) return;
+    const a = getAction();
+    const err = $('#a-error', box);
+    err.hidden = true;
+    const fail = (m) => { err.textContent = m; err.hidden = false; };
+    const shopCode = isNew ? cleanCode($('#a-shop', box).value) : shop.code;
+    if (shopCode.length !== 12 || [...shopCode].some((c) => !LETTERS.includes(c))) return fail('The Shop ID has 12 letters and digits, like ABCD-EFGH-JKMN.');
+    if (isNew && shopById(shopCode)) return fail('This shop is already on the list. Open it from the list instead.');
+    const name = $('#a-name', box).value.trim();
+    if (!$('#w-details', box).hidden && $('#a-name', box).required && !name) return fail('Type the shop\'s name.');
+    const until = $('#a-until', box).value;
+    if (a === 'Renew until the date below' && (!until || until < t)) return fail('Choose a last day from today on.');
+    const amount = $('#a-amount', box).value.trim();
+    if (a === 'Record payment only' && !amount) return fail('Type the amount paid.');
+    const num = (id) => { const x = $(id, box).value.trim(); return x === '' ? '0' : String(Math.max(0, Math.floor(Number(x)))); };
+    const ticked = [...box.querySelectorAll('input[name=feature]:checked')].map((c) => c.value);
+    const inputs = { shop: shopCode, action: a, plan: 'keep' };
+    if (a === 'Renew until the date below') inputs.until = until;
+    if (TAKES_TERMS(a)) Object.assign(inputs, { plan: $('#a-plan', box).value, branches: num('#a-branches'), pos: num('#a-pos'), users: num('#a-users'), features: ticked.length ? ticked.join(',') : 'none' });
+    if (isNew && name) inputs.name = name;
+    else if (shop) inputs.name = (a === 'Edit details only' && name) || shop.name;
+    const details = {};
+    if (!$('#w-details', box).hidden) for (const f of ['name', 'vat', 'contact', 'phone', 'city', 'notes']) { const x = $(`#a-${f}`, box).value.trim(); if (x || shop?.[f]) details[f] = x; }
+    if (preset.archived !== undefined) details.archived = preset.archived;
+    const payment = !$('#w-pay', box).hidden && amount ? { amount, paidOn: $('#a-paidOn', box).value || t, receipt: $('#a-receipt', box).value, note: $('#a-payNote', box).value } : null;
+
+    state.running = true;
+    const go = $('#a-go', box);
+    go.disabled = true;
+    go.textContent = 'Working…';
+    box.querySelectorAll('fieldset, #a-action, #a-shop').forEach((el) => (el.disabled = true));
+    const steps = $('#a-steps', box);
+    steps.hidden = false;
+    const lis = steps.querySelectorAll('li');
+    const step = (i, how, words) => { lis[i].className = how; if (words) lis[i].textContent = words; };
+    try {
+      const done = await runForm({ inputs, details, payment }, step);
+      state.open = done.code;
+      render();
+      const s = shopState(done, today());
+      const doneBox = $('#a-done', box);
+      doneBox.hidden = false;
+      doneBox.innerHTML = `<p class="ok"><b>Done.</b> ${esc(done.name)}: ${done.expires ? `last day ${dmy(done.expires)}` : 'no end date'}${s.state === 'unlocked' ? `, unlocked until ${dmy(done.unlockUntil)}` : ''}.</p>
+        ${CHANGES_LICENCE(a) ? `<p class="small muted">The shop's server takes it by itself within a few hours, or at once with <b>Check now</b> on its Licence page. A shop with no internet needs the code below.</p>
+        <div class="code-box mono">${esc(done.offlineCode ?? '')}</div>
+        <div class="actions" style="margin-top:8px"><button type="button" class="btn small" data-act="copy-new">Copy code</button>${done.phone ? '<button type="button" class="btn small" data-act="wa-new">Send by WhatsApp</button>' : ''}</div>` : ''}`;
+      doneBox.querySelector('[data-act=copy-new]')?.addEventListener('click', () => copy(done.offlineCode));
+      doneBox.querySelector('[data-act=wa-new]')?.addEventListener('click', () => openWhatsApp(done.phone, codeText(done)));
+      go.hidden = true;
+      box.querySelector('[data-act=cancel]').textContent = 'Close';
+    } catch (ex) {
+      fail(ex.message);
+      go.disabled = false;
+      go.textContent = 'Try again';
+      box.querySelectorAll('fieldset, #a-action, #a-shop').forEach((el) => (el.disabled = false));
+    } finally {
+      state.running = false;
+    }
+  });
+}
+
+// ---------------------------------------------------------------- Settings
+
+function openSettings(why = '') {
+  closeDialog();
+  const shade = document.createElement('div');
+  shade.className = 'shade top';
+  const box = document.createElement('div');
+  box.className = 'dialog';
+  box.innerHTML = `<form class="panel" id="settings-form">
+    <h2>Settings on this device</h2>
+    ${why ? `<p class="ok">${esc(why)}</p>` : ''}
+    <p class="muted small">Renewing from this page runs the "Renew licence" form on GitHub for you. For that, this device needs a GitHub access key of your own. Make one once:</p>
+    <ol class="small">
+      <li>On github.com, open your picture → <b>Settings</b> → <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
+      <li>Name: <i>Licences page</i>. Expiration: up to a year. Repository access: <b>Only select repositories</b> → <b>${esc(REPO.repo)}</b>.</li>
+      <li>Permissions → Repository permissions: <b>Actions: Read and write</b> (Contents and Metadata: Read-only come with it).</li>
+      <li>Press <b>Generate token</b>, copy it and paste it here.</li>
+    </ol>
+    <label class="f">GitHub access key<input id="s-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" value="${esc(state.token ?? '')}"></label>
+    <label class="check"><input id="s-remember" type="checkbox" checked> Remember on this device</label>
+    <div id="s-msg" class="small" style="margin-top:8px"></div>
+    <div class="foot">
+      ${state.token ? '<button type="button" class="btn danger" data-act="forget">Forget the key</button>' : ''}
+      <button type="button" class="btn" data-act="cancel">Close</button>
+      <button type="submit" class="btn primary">Check and save</button>
+    </div>
+  </form>`;
+  document.body.append(shade, box);
+  const close = () => closeDialog();
+  shade.addEventListener('click', close);
+  box.querySelector('[data-act=cancel]').addEventListener('click', close);
+  box.querySelector('[data-act=forget]')?.addEventListener('click', () => { state.token = null; me = null; store.set('licences.token', null); closeDialog(); render(); });
+  $('#settings-form', box).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('#s-msg', box);
+    const token = $('#s-token', box).value.trim();
+    state.token = token || null;
+    me = null;
+    msg.className = 'small';
+    msg.textContent = 'Checking…';
+    try {
+      const login = await whoAmI();
+      const res = await gh(`/actions/workflows/${WORKFLOW}`);
+      if (!res.ok) throw new Error('The key works, but it cannot see the "Renew licence" form. Give it the support repository with "Actions: Read and write".');
+      store.set('licences.token', token, $('#s-remember', box).checked);
+      msg.className = 'ok';
+      msg.textContent = `Saved. Signed in to GitHub as ${login}.`;
+      setTimeout(() => { closeDialog(); render(); }, 900);
+    } catch (ex) {
+      msg.className = 'error';
+      msg.textContent = ex.message;
+    }
+  });
+}
+
+// ---------------------------------------------------------------- Excel (CSV that Excel opens)
+
+function exportCsv() {
+  const t = today();
+  const head = ['Shop', 'Shop ID', 'VAT number', 'Contact', 'Phone', 'City', 'Plan', 'Branches', 'POS counters', 'Users', 'Extra parts', 'Last day', 'Days left', 'State', 'Unlocks', 'Last paid', 'Last paid on', 'Paid this year', 'Notes', 'Archived'];
+  const rows = filtered().map(({ shop: s, ...st }) => {
+    const p = lastPayment(s);
+    return [s.name, shopIdText(s.code), s.vat, s.contact, s.phone, s.city, s.plan, s.branches ?? 'no limit', s.pos ?? 'no limit', s.users ?? 'no limit', (s.features ?? []).join(' '), s.expires ?? 'no end', st.daysLeft ?? '', STATE_WORDS[st.state], s.unlocks ?? 0, p?.amount ?? '', p?.paidOn ?? '', paidIn(s, `${t.slice(0, 4)}-01-01`, t), s.notes, s.archived ? 'yes' : ''];
+  });
+  const cell = (x) => { const v = String(x ?? ''); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+  const csv = '﻿' + [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `licences-${t}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+// ---------------------------------------------------------------- Events
+
+document.addEventListener('click', async (e) => {
+  if (e.target.closest('.drawer, .dialog')) return;
+  const b = e.target.closest('[data-act], [data-filter], [data-renew], [data-open]');
+  if (!b) return;
+  if (b.dataset.renew) return openAction(b.dataset.renew, 'Renew for 1 year');
+  if (b.dataset.filter) { state.filter = state.filter === b.dataset.filter ? 'all' : b.dataset.filter; return render(); }
+  if (b.dataset.open) return renderDrawer(b.dataset.open);
+  const act = b.dataset.act;
+  if (act === 'add') openAction(null, 'Renew for 1 year');
+  else if (act === 'settings') openSettings();
+  else if (act === 'excel') exportCsv();
+  else if (act === 'lock') { state.register = null; state.password = null; store.set('licences.password', null); closeDrawer(); render(); }
+  else if (act === 'refresh') {
+    b.disabled = true;
+    try { state.register = await loadRegister(); render(); toast('Up to date'); } catch (ex) { alert(ex.message); b.disabled = false; }
+  }
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'search') { state.search = e.target.value; renderList(); }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'filter') { state.filter = e.target.value; render(); }
+  if (e.target.id === 'sort') { state.sort = e.target.value; renderList(); }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !document.querySelector('.dialog') && state.open) closeDrawer();
+  if (e.key === 'F2' || (e.key === '/' && !/input|textarea|select/i.test(e.target.tagName))) { e.preventDefault(); $('#search')?.focus(); }
+});
+
+// Open straight away when the password is remembered.
+(async () => {
+  if (state.password) {
+    try { state.register = await loadRegister(); } catch { state.password = null; }
+  }
+  render();
+})();
+</script>
+</body>
+</html>

@@ -8,12 +8,15 @@
 // the same sealed text as the "offline code" to paste on a shop with no internet.
 //
 // The repository is public, so nothing here names a shop: the file name and the sealed text are worked out from
-// the Shop ID, and the Shop ID and name typed in the form are hidden in the run's log. The sums are the same as
+// the Shop ID, and the Shop ID and name typed in the form are hidden in the run's log. With the secret REGISTER_KEY
+// it also keeps the seller's list of shops (licences/register.enc, locked with that password, register.mjs), and
+// takes requests from the Licences page (index.html) locked with the same password in the `request` box. The sums are the same as
 // `packages/shared/src/license.ts` and `support.ts` (a test there checks they agree).
 
 import { createCipheriv, createDecipheriv, createHash, createHmac, createPrivateKey, randomBytes, sign } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { emptyRegister, lockWith, openWith, REQUEST_PREFIX } from './register.mjs';
 
 /** The parts of the app a licence can include (FEATURES in the app) and the plans (LICENSE_PLANS). */
 export const FEATURES = ['repairs', 'manufacturing', 'hr', 'whatsapp', 'vehicles'];
@@ -60,7 +63,7 @@ export function signTerms(seed, terms) {
   return `${body.toString('base64url')}.${sign(null, body, key).toString('base64url')}`;
 }
 
-const termsOf = (key) => {
+export const termsOf = (key) => {
   try {
     return JSON.parse(Buffer.from(String(key).split('.')[0], 'base64url').toString('utf8'));
   } catch {
@@ -87,7 +90,7 @@ const yearFrom = (start) => {
 };
 const saudiToday = (now) => new Date(now + 3 * 3_600_000).toISOString().slice(0, 10);
 
-class Stop extends Error {}
+export class Stop extends Error {}
 
 function limitFrom(text, before) {
   const v = String(text ?? '').trim().toLowerCase();
@@ -176,29 +179,128 @@ export function renew({ seed, inputs, existing, now = Date.now() }) {
   };
 }
 
-function main() {
+/** Actions that change no licence: they only add a shop to the list, change its details or note a payment. */
+export const LIST_ONLY = ['Add to list only (no change)', 'Edit details only', 'Record payment only'];
+const listOnly = (action) => LIST_ONLY.includes(String(action ?? ''));
+
+const DETAIL_FIELDS = ['name', 'vat', 'contact', 'phone', 'city', 'notes', 'archived'];
+
+/**
+ * Brings the seller's list up to date after a run: the shop's licence as its file now holds it, the details typed,
+ * one line of history (with the payment, when one was typed) and the offline code. Returns the list.
+ */
+export function updateRegister({ register, code, action, before, after, sealed, details = {}, payment = null, summary = [], by = null, rid = null, now = Date.now() }) {
+  const list = register ?? emptyRegister();
+  const at = new Date(now).toISOString();
+  const known = list.shops[code];
+  if (!known && action === 'Record payment only') throw new Stop('This shop is not on the list yet. Add it first.');
+  const shop = known ?? { code, addedAt: at, history: [], unlocks: 0 };
+  const key = after?.key ? termsOf(after.key) : null;
+  if (key) {
+    shop.name = key.holder ?? shop.name;
+    for (const f of ['plan', 'branches', 'pos', 'users', 'features', 'expires', 'issued']) shop[f] = key[f] ?? null;
+    shop.keyNo = key.no;
+  }
+  const unlock = after?.unlock ? termsOf(after.unlock) : null;
+  if (unlock && after.unlock !== before?.unlock) {
+    shop.unlockUntil = unlock.until;
+    shop.unlocks = (shop.unlocks ?? 0) + 1;
+  } else if (!after?.unlock) shop.unlockUntil = null;
+  for (const f of DETAIL_FIELDS) {
+    const v = details[f];
+    if (v === undefined || v === null) continue;
+    shop[f] = typeof v === 'string' ? v.trim().slice(0, f === 'notes' ? 2000 : 200) : v;
+  }
+  if (!shop.name) throw new Stop('Type the shop\'s name.');
+  if (sealed) shop.offlineCode = sealed;
+  shop.online = !!after?.key || !!after?.unlock || !!shop.online;
+  const money = payment && String(payment.amount ?? '').trim() !== '' ? Number(payment.amount) : null;
+  if (money != null && !(Number.isFinite(money) && money >= 0)) throw new Stop('The amount paid is not a number.');
+  const line = { at, by, action, text: summary.join(' '), rid };
+  if (money != null) Object.assign(line, { amount: Math.round(money * 100) / 100, paidOn: String(payment.paidOn ?? '').trim() || at.slice(0, 10), receipt: String(payment.receipt ?? '').trim().slice(0, 60), note: String(payment.note ?? '').trim().slice(0, 300) });
+  shop.history = [...(shop.history ?? []), line].slice(-200);
+  shop.updatedAt = at;
+  list.shops[code] = shop;
+  list.updated = at;
+  list.lastRequest = rid;
+  return list;
+}
+
+async function main() {
   const summaryFile = process.env.GITHUB_STEP_SUMMARY;
   const say = (text) => (summaryFile ? appendFileSync(summaryFile, `${text}\n`) : console.log(text));
   try {
     const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
-    const inputs = event.inputs ?? {};
+    let inputs = event.inputs ?? {};
+    const listKey = String(process.env.REGISTER_KEY ?? '');
+    // From the Licences page: everything comes locked with the list password, so the run's inputs say nothing.
+    const fromPage = !!String(inputs.request ?? '').trim();
+    let request = null;
+    if (fromPage) {
+      if (!listKey) throw new Stop('The list password is missing. Add the secret REGISTER_KEY (Settings, Secrets and variables, Actions).');
+      request = await openWith(listKey, inputs.request, REQUEST_PREFIX);
+      if (!request) throw new Stop('The request could not be opened: the password typed on the Licences page is not the same as the REGISTER_KEY secret.');
+      inputs = request.inputs ?? {};
+    }
     // The repository is public: the shop's ID and name never show in the log.
     for (const secret of [inputs.shop, cleanCode(inputs.shop), inputs.name]) if (secret && String(secret).trim()) console.log(`::add-mask::${String(secret).trim()}`);
     const seed = Buffer.from(String(process.env.SIGNING_KEY ?? '').trim(), 'base64url');
     if (seed.length !== 32) throw new Stop('The signing key is missing or wrong. Add the secret LICENSE_SIGNING_KEY (Settings, Secrets and variables, Actions) with the long line from SIGNING-KEY-KEEP-SECRET.txt.');
     const code = cleanCode(inputs.shop);
+    if (code.length !== 12 || [...code].some((c) => !LETTERS.includes(c))) throw new Stop('The Shop ID has 12 letters and digits, like ABCD-EFGH-JKMN. Copy it from the shop\'s Licence page.');
     const path = `licences/${fileName(code)}`;
     let existing = null;
-    if (code.length === 12 && existsSync(path)) {
+    if (existsSync(path)) {
       existing = unseal(code, readFileSync(path, 'utf8'));
       if (!existing) throw new Stop('This shop\'s licence file could not be opened. Check the Shop ID.');
     }
-    const result = renew({ seed, inputs, existing });
-    const sealed = seal(result.code, result.content);
-    mkdirSync('licences', { recursive: true });
-    writeFileSync(path, `${sealed}\n`);
+
+    // The list, when the seller keeps one.
+    const registerPath = 'licences/register.enc';
+    let register = null;
+    if (listKey) {
+      register = existsSync(registerPath) ? await openWith(listKey, readFileSync(registerPath, 'utf8')) : emptyRegister();
+      if (!register) throw new Stop('The list (register.enc) could not be opened with the REGISTER_KEY secret. Put back the password it was made with.');
+    }
+    if (listOnly(inputs.action) && !register) throw new Stop('Keeping a list needs the secret REGISTER_KEY (Settings, Secrets and variables, Actions).');
+
+    let result = null;
+    let sealed = null;
+    if (!listOnly(inputs.action)) {
+      result = renew({ seed, inputs, existing });
+      sealed = seal(result.code, result.content);
+      mkdirSync('licences', { recursive: true });
+      writeFileSync(path, `${sealed}\n`);
+    }
+    if (register) {
+      const details = { ...(request?.details ?? {}) };
+      if (!fromPage && String(inputs.name ?? '').trim()) details.name = inputs.name;
+      if (details.name === undefined && listOnly(inputs.action) && existing?.key) details.name = termsOf(existing.key)?.holder;
+      const updated = updateRegister({
+        register,
+        code,
+        action: inputs.action,
+        before: existing,
+        after: result ? result.content : existing,
+        sealed,
+        details,
+        payment: request?.payment ?? null,
+        summary: result?.summary ?? [],
+        by: process.env.GITHUB_ACTOR ?? null,
+        rid: request?.rid ?? null,
+      });
+      writeFileSync(registerPath, `${await lockWith(listKey, updated)}\n`);
+    }
+
     say('## Done');
-    for (const line of result.summary) say(`- ${line}`);
+    if (fromPage) {
+      // The page reads the result from the locked list; the public summary says nothing about the shop.
+      say('');
+      say('Open the Licences page to see it.');
+      return;
+    }
+    for (const line of result?.summary ?? ['Added to the list. The licence is as it was.']) say(`- ${line}`);
+    if (!sealed) return;
     say('');
     say('The shop\'s server picks it up by itself within a few hours (or at once with **Check now** on its Licence page).');
     say('If the shop has no internet, send it this code to paste on its Licence page:');
@@ -214,4 +316,4 @@ function main() {
   }
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) await main();

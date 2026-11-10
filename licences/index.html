@@ -66,6 +66,8 @@
   .s-grace, .s-limited { background: var(--bad-soft); color: var(--bad); }
   .s-stopped { background: var(--gray-soft); color: var(--text); }
   .s-unlocked { background: var(--info-soft); color: var(--info); }
+  .h-bad { color: var(--bad); } .h-warn { color: var(--warn); } .h-ok { color: var(--good); }
+  ul.warn-list { margin: 6px 0 0; padding-inline-start: 18px; }
   .days-bad { color: var(--bad); font-weight: 700; } .days-warn { color: var(--warn); font-weight: 700; }
   .empty { padding: 40px 16px; text-align: center; color: var(--muted); }
   .center { max-width: 420px; margin: 10vh auto 0; padding: 24px; }
@@ -117,7 +119,7 @@
 <main id="app"></main>
 
 <script type="module">
-import { emptyRegister, lockWith, openWith, REQUEST_PREFIX, saudiToday, shopState, STATE_WORDS, daysBetween, lastPayment, shopIdText, addDays } from './register.mjs';
+import { emptyRegister, lockWith, openWith, REQUEST_PREFIX, saudiToday, shopState, STATE_WORDS, daysBetween, lastPayment, shopIdText, addDays, healthReportId, openHealthReport, healthWarnings, versionOrder, checkText, CHECK_WORDS } from './register.mjs';
 
 // ---------------------------------------------------------------- Settings kept on this device
 
@@ -147,7 +149,10 @@ const FEATURE_WORDS = { repairs: 'Repair jobs', manufacturing: 'Manufacturing', 
 const state = {
   password: store.get('licences.password'),
   token: store.get('licences.token'),
+  readKey: store.get('licences.readKey'),
   register: null,
+  health: {}, // Shop ID → { at, report } from the collector
+  healthNote: '', // why reports could not be read, shown on the page
   filter: 'all',
   search: '',
   sort: 'days',
@@ -228,6 +233,52 @@ async function loadRegister(password = state.password) {
   const opened = await openWith(password, text);
   if (!opened) throw new Error('Wrong password. Type the list password (the same as the REGISTER_KEY secret).');
   return opened;
+}
+
+/** The collector's address, from the same public file the shops' servers read. */
+async function collectorAddress() {
+  const res = await fetch(`${RAW}licences/health-address.txt?t=${Date.now()}`, { cache: 'no-store' });
+  if (!res.ok) return '';
+  const url = (await res.text()).trim().split(/\s+/)[0] ?? '';
+  return /^https:\/\/\S+$/.test(url) ? url.replace(/\/+$/, '') : '';
+}
+
+/** Reads each shop's latest health report from the collector and opens it with its Shop ID. */
+async function loadHealth() {
+  if (!state.readKey || !state.register) return;
+  try {
+    const url = await collectorAddress();
+    if (!url) throw new Error('The collector address is not set up yet (licences/health-address.txt).');
+    const list = shops();
+    const ids = await Promise.all(list.map((s) => healthReportId(s.code)));
+    const res = await fetch(`${url}/lookup`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${state.readKey}` }, body: JSON.stringify({ ids, history: true }) });
+    if (res.status === 401) throw new Error('The collector refused the read key. Open Settings and check it.');
+    if (!res.ok) throw new Error(`The collector answered ${res.status}.`);
+    const { reports } = await res.json();
+    const health = {};
+    await Promise.all(list.map(async (s, i) => {
+      const rows = reports[ids[i]];
+      if (!rows?.length) return;
+      const opened = await Promise.all(rows.map(async (r) => ({ at: r.at, report: await openHealthReport(s.code, r.report) })));
+      health[s.code] = { ...opened[0], history: opened };
+    }));
+    state.health = health;
+    state.healthNote = '';
+  } catch (ex) {
+    state.healthNote = ex.message;
+  }
+}
+const newestVersion = () => Object.values(state.health).map((h) => h.report?.app?.version).filter(Boolean).sort(versionOrder).at(-1) ?? null;
+const warningsOf = (shop, newest = newestVersion()) => healthWarnings(shop, state.health[shop.code], today(), newest);
+const seenText = (iso) => {
+  if (!iso) return '';
+  const days = daysBetween(saudiToday(Date.parse(iso)), today());
+  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
+};
+/** Loads the health reports and draws the page again, without holding up the list. */
+function refreshHealth() {
+  if (!state.readKey) return;
+  void loadHealth().then(() => { if (state.register) render(); });
 }
 
 let me = null;
@@ -328,6 +379,17 @@ function render() {
     ['stopped', 'Stopped', count((r) => r.state === 'stopped'), ''],
     ['unlocked', '7-day unlocks running', count((r) => r.state === 'unlocked'), 'info'],
   ];
+  if (state.readKey) {
+    const newest = newestVersion();
+    const warned = live.map((s) => ({ s, w: warningsOf(s, newest) }));
+    const has = (kind) => warned.filter(({ w }) => w.some((x) => x.kind === kind)).length;
+    tiles.push(
+      ['quiet', `Not reporting (3+ days)`, has('quiet'), 'bad'],
+      ['attention', 'Needs attention', warned.filter(({ w }) => w.length).length, 'warn'],
+      ['limits', 'Over licence limits', has('limits'), 'bad'],
+      ['oldVersion', newest ? `Older than ${newest}` : 'Old version', has('version'), 'warn'],
+    );
+  }
   app.innerHTML = `
     <header class="top">
       <div><h1>Licences</h1><div class="muted small">${esc(REPO.owner)}/${esc(REPO.repo)} · list saved ${state.register.updated ? esc(new Date(state.register.updated).toLocaleString('en-GB')) : 'never'}</div></div>
@@ -339,6 +401,7 @@ function render() {
         <button class="btn" data-act="lock">🔒 Lock</button>
       </div>
     </header>
+    ${state.healthNote ? `<div class="panel bar"><span class="h-warn">Health reports: ${esc(state.healthNote)}</span></div>` : ''}
     ${state.token ? '' : `<div class="panel bar"><span>To renew from this page, save a GitHub access key on this device.</span><button class="btn small primary" data-act="settings">Set it up</button></div>`}
     <div class="tiles">
       ${tiles.map(([k, label, n, tone]) => `<button class="panel tile ${tone} ${state.filter === k ? 'on' : ''}" data-filter="${k}"><b>${n}</b><span>${label}</span></button>`).join('')}
@@ -349,10 +412,10 @@ function render() {
     <div class="panel bar">
       <input type="search" id="search" placeholder="Search name, Shop ID, VAT number, phone, city or notes" value="${esc(state.search)}">
       <select id="filter" aria-label="Show">
-        ${[['all', 'All shops'], ['active', 'Active'], ['ending', 'Ending in 30 days'], ['ended', 'Ended (grace or locked)'], ['stopped', 'Stopped'], ['unlocked', '7-day unlock running'], ['noEnd', 'No end date'], ['archived', 'Archived']].map(([k, l]) => `<option value="${k}" ${state.filter === k ? 'selected' : ''}>${l}</option>`).join('')}
+        ${[['all', 'All shops'], ['active', 'Active'], ['ending', 'Ending in 30 days'], ['ended', 'Ended (grace or locked)'], ['stopped', 'Stopped'], ['unlocked', '7-day unlock running'], ['noEnd', 'No end date'], ...(state.readKey ? [['quiet', 'Not reporting (3+ days)'], ['attention', 'Needs attention'], ['limits', 'Over licence limits'], ['oldVersion', 'Old app version'], ['noReport', 'Never reported']] : []), ['archived', 'Archived']].map(([k, l]) => `<option value="${k}" ${state.filter === k ? 'selected' : ''}>${l}</option>`).join('')}
       </select>
       <select id="sort" aria-label="Sort">
-        ${[['days', 'Sort: days left'], ['name', 'Sort: name'], ['paid', 'Sort: last paid'], ['added', 'Sort: newest added']].map(([k, l]) => `<option value="${k}" ${state.sort === k ? 'selected' : ''}>${l}</option>`).join('')}
+        ${[['days', 'Sort: days left'], ['name', 'Sort: name'], ['paid', 'Sort: last paid'], ['added', 'Sort: newest added'], ...(state.readKey ? [['seen', 'Sort: last report']] : [])].map(([k, l]) => `<option value="${k}" ${state.sort === k ? 'selected' : ''}>${l}</option>`).join('')}
       </select>
     </div>
     <div class="panel table-box" id="list"></div>`;
@@ -369,6 +432,14 @@ function filtered() {
   const f = state.filter;
   if (f === 'active') rows = rows.filter((r) => r.state === 'active' || r.state === 'noEnd');
   else if (f === 'ended') rows = rows.filter((r) => r.state === 'grace' || r.state === 'limited');
+  else if (['quiet', 'limits', 'oldVersion'].includes(f)) {
+    const kind = f === 'oldVersion' ? 'version' : f;
+    const newest = newestVersion();
+    rows = rows.filter((r) => warningsOf(r.shop, newest).some((w) => w.kind === kind));
+  } else if (f === 'attention') {
+    const newest = newestVersion();
+    rows = rows.filter((r) => warningsOf(r.shop, newest).length);
+  } else if (f === 'noReport') rows = rows.filter((r) => !state.health[r.shop.code]);
   else if (!['all', 'archived'].includes(f)) rows = rows.filter((r) => r.state === f);
   if (q) {
     rows = rows.filter(({ shop }) =>
@@ -381,6 +452,7 @@ function filtered() {
     name: (a, b) => String(a.shop.name).localeCompare(String(b.shop.name)),
     paid: (a, b) => String(lastPayment(b.shop)?.paidOn ?? '').localeCompare(String(lastPayment(a.shop)?.paidOn ?? '')),
     added: (a, b) => String(b.shop.addedAt ?? '').localeCompare(String(a.shop.addedAt ?? '')),
+    seen: (a, b) => String(state.health[a.shop.code]?.at ?? '').localeCompare(String(state.health[b.shop.code]?.at ?? '')),
   };
   return rows.sort(by[state.sort] ?? by.days);
 }
@@ -395,6 +467,7 @@ function renderList() {
   const box = $('#list');
   if (!box) return;
   const rows = filtered();
+  const newest = newestVersion();
   if (!shops().length) {
     box.innerHTML = `<div class="empty"><p>No shops on the list yet.</p><p class="small">Press <b>＋ Add shop</b> for a new shop, or choose <b>Add a shop renewed before</b> there to bring in the shops you renewed earlier.</p></div>`;
     return;
@@ -404,10 +477,14 @@ function renderList() {
     return;
   }
   box.innerHTML = `<table>
-    <thead><tr><th>Shop</th><th class="hide-narrow">Shop ID</th><th class="hide-narrow">Phone</th><th class="hide-narrow">Plan</th><th class="hide-narrow">Branches / POS / users</th><th>Last day</th><th class="num">Days left</th><th>State</th><th class="hide-narrow num">Last paid</th><th></th></tr></thead>
+    <thead><tr><th>Shop</th><th class="hide-narrow">Shop ID</th><th class="hide-narrow">Phone</th><th class="hide-narrow">Plan</th><th class="hide-narrow">Branches / POS / users</th><th>Last day</th><th class="num">Days left</th><th>State</th><th class="hide-narrow num">Last paid</th>${state.readKey ? '<th class="hide-narrow">App</th>' : ''}<th></th></tr></thead>
     <tbody>${rows
       .map((r) => {
         const s = r.shop;
+        const h = state.health[s.code];
+        const warns = state.readKey ? warningsOf(s, newest) : [];
+        const tone = warns.some((w) => w.tone === 'bad') ? 'h-bad' : warns.length ? 'h-warn' : 'h-ok';
+        const appCell = !state.readKey ? '' : `<td class="hide-narrow">${h ? `<span class="${tone}" title="${esc(warns.map((w) => w.text).join('\n'))}">●</span> ${esc(h.report?.app?.version ?? '?')}<div class="muted small">${esc(seenText(h.at))}${warns.length ? ` · ${warns.length} to check` : ''}</div>` : '<span class="muted small">No report yet</span>'}</td>`;
         const paid = lastPayment(s);
         return `<tr data-open="${s.code}">
           <td><b>${esc(s.name)}</b>${s.city ? `<div class="muted small">${esc(s.city)}</div>` : ''}${s.vat ? `<div class="muted small mono">VAT ${esc(s.vat)}</div>` : ''}</td>
@@ -419,6 +496,7 @@ function renderList() {
           <td class="num">${daysCell(r)}</td>
           <td><span class="badge s-${r.state}">${esc(STATE_WORDS[r.state])}</span>${s.unlocks ? `<div class="muted small">${s.unlocks} unlock${s.unlocks > 1 ? 's' : ''}</div>` : ''}</td>
           <td class="hide-narrow num">${paid ? `${money(paid.amount)}<div class="muted small">${dmy(paid.paidOn)}</div>` : ''}</td>
+          ${appCell}
           <td><button class="btn small" data-renew="${s.code}">Renew</button></td>
         </tr>`;
       })
@@ -452,6 +530,7 @@ function renderLock(app) {
       state.password = pw;
       store.set('licences.password', pw, $('#remember').checked);
       render();
+      refreshHealth();
     } catch (ex) {
       err.textContent = ex.message;
       err.hidden = false;
@@ -466,6 +545,31 @@ function renderLock(app) {
 function closeDrawer() {
   state.open = null;
   document.querySelectorAll('.drawer, .shade.drawer-shade').forEach((el) => el.remove());
+}
+
+/** The drawer's Health section: the shop's latest report, opened with its Shop ID. */
+function healthSection(shop) {
+  if (!state.readKey) return '';
+  const h = state.health[shop.code];
+  if (!h) return `<h3>Health</h3><p class="muted small">No report from this shop yet. Reports come once a day from shops updated to a version that sends them, unless the shop switched them off on its Licence page.</p>`;
+  const r = h.report;
+  if (!r) return `<h3>Health</h3><p class="error small">A report came ${esc(seenText(h.at))} but could not be opened with this Shop ID.</p>`;
+  const warns = warningsOf(shop);
+  const lic = r.licence ?? {};
+  const use = (k, words) => `${words} ${r.use?.[k] ?? '?'} of ${limitText(shop[k])}`;
+  const days = (h.history ?? []).map((x) => x.at.slice(0, 10));
+  return `<h3>Health</h3>
+    <dl class="facts">
+      <dt>Last report</dt><dd>${esc(new Date(h.at).toLocaleString('en-GB'))} (${esc(seenText(h.at))})</dd>
+      <dt>App version</dt><dd>${esc(r.app?.version ?? '?')}${r.app?.installedAt ? ` · installed ${dmy(r.app.installedAt.slice(0, 10))}` : ''}</dd>
+      <dt>Licence at the shop</dt><dd>${esc(lic.state ?? '')}${lic.endsOn ? ` · last day ${dmy(lic.endsOn)}` : ''}${lic.keyNo ? ` · key ${esc(lic.keyNo)}` : ''}</dd>
+      <dt>In use</dt><dd>${use('branches', 'Branches')} · ${use('pos', 'POS')} · ${use('users', 'Users')}</dd>
+      <dt>Businesses on its server</dt><dd>${esc(r.businesses ?? '?')} · ${esc(r.country ?? '')}</dd>
+      <dt>Reports kept</dt><dd>${days.length} (since ${dmy(days.at(-1))})</dd>
+    </dl>
+    ${warns.length ? `<ul class="warn-list small">${warns.map((w) => `<li class="h-${w.tone}">${esc(w.text)}</li>`).join('')}</ul>` : '<p class="h-ok small">Nothing to check.</p>'}
+    ${(r.pos ?? []).length ? `<div class="table-box" style="margin-top:8px"><table class="history"><thead><tr><th>POS</th><th>App</th><th>Update</th><th>Last seen</th></tr></thead><tbody>${r.pos.map((p) => `<tr><td>${esc(p.code)}${p.active ? '' : ' <span class="muted">(off)</span>'}</td><td>${esc(p.appVersion)}</td><td class="${p.update === 'ok' ? 'h-ok' : p.update ? 'h-warn' : 'muted'}">${esc(p.update === 'too_old' ? 'too old' : p.update ?? 'never connected')}</td><td>${p.lastSeenAt ? esc(seenText(p.lastSeenAt)) : ''}</td></tr>`).join('')}</tbody></table></div>` : ''}
+    <div class="table-box" style="margin-top:8px"><table class="history"><thead><tr><th>Check</th><th>State</th></tr></thead><tbody>${(r.checks ?? []).map((c) => `<tr><td>${esc(CHECK_WORDS[c.key] ?? c.key)}</td><td class="h-${c.status === 'ok' ? 'ok' : c.status === 'bad' ? 'bad' : 'warn'}">${esc(checkText(c) || c.status)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 function renderDrawer(code) {
@@ -520,6 +624,7 @@ function renderDrawer(code) {
         <dt>On the list since</dt><dd>${shop.addedAt ? dmy(shop.addedAt.slice(0, 10)) : ''}</dd>
       </dl>
       ${shop.offlineCode ? `<h3>Licence code for a shop without internet</h3><div class="code-box mono">${esc(shop.offlineCode)}</div><button class="btn small" style="margin-top:6px" data-act="copy-code">Copy code</button>` : ''}
+      ${healthSection(shop)}
       <h3>History</h3>
       <div class="table-box"><table class="history"><thead><tr><th>Date</th><th>What</th><th class="num">Paid</th><th>By</th></tr></thead><tbody>
         ${[...(shop.history ?? [])].reverse().map((h) => `<tr><td>${dmy(h.at.slice(0, 10))}</td><td><b>${esc(h.action)}</b>${h.text ? `<div class="muted">${esc(h.text)}</div>` : ''}${h.receipt || h.note ? `<div class="muted">${esc([h.receipt && `Receipt ${h.receipt}`, h.note].filter(Boolean).join(' · '))}</div>` : ''}</td><td class="num">${h.amount != null ? `${money(h.amount)}<div class="muted">${dmy(h.paidOn)}</div>` : ''}</td><td>${esc(h.by ?? '')}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Nothing yet.</td></tr>'}
@@ -744,6 +849,7 @@ function openSettings(why = '') {
       <li>Press <b>Generate token</b>, copy it and paste it here.</li>
     </ol>
     <label class="f">GitHub access key<input id="s-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" value="${esc(state.token ?? '')}"></label>
+    <label class="f">Health reports read key (the READ_KEY you gave the collector; empty = don't show reports)<input id="s-readKey" type="password" autocomplete="off" spellcheck="false" value="${esc(state.readKey ?? '')}"></label>
     <label class="check"><input id="s-remember" type="checkbox" checked> Remember on this device</label>
     <div id="s-msg" class="small" style="margin-top:8px"></div>
     <div class="foot">
@@ -761,6 +867,15 @@ function openSettings(why = '') {
     e.preventDefault();
     const msg = $('#s-msg', box);
     const token = $('#s-token', box).value.trim();
+    const readKey = $('#s-readKey', box).value.trim();
+    if (readKey !== (state.readKey ?? '')) {
+      state.readKey = readKey || null;
+      state.health = {};
+      state.healthNote = '';
+      store.set('licences.readKey', state.readKey, $('#s-remember', box).checked);
+      refreshHealth();
+      if (!token) { closeDialog(); render(); return; }
+    }
     state.token = token || null;
     me = null;
     msg.className = 'small';
@@ -784,10 +899,10 @@ function openSettings(why = '') {
 
 function exportCsv() {
   const t = today();
-  const head = ['Shop', 'Shop ID', 'VAT number', 'Contact', 'Phone', 'City', 'Plan', 'Branches', 'POS counters', 'Users', 'Extra parts', 'Last day', 'Days left', 'State', 'Unlocks', 'Last paid', 'Last paid on', 'Paid this year', 'Notes', 'Archived'];
+  const head = ['Shop', 'Shop ID', 'VAT number', 'Contact', 'Phone', 'City', 'Plan', 'Branches', 'POS counters', 'Users', 'Extra parts', 'Last day', 'Days left', 'State', 'Unlocks', 'Last paid', 'Last paid on', 'Paid this year', 'Notes', 'Archived', 'App version', 'Last report', 'To check'];
   const rows = filtered().map(({ shop: s, ...st }) => {
     const p = lastPayment(s);
-    return [s.name, shopIdText(s.code), s.vat, s.contact, s.phone, s.city, s.plan, s.branches ?? 'no limit', s.pos ?? 'no limit', s.users ?? 'no limit', (s.features ?? []).join(' '), s.expires ?? 'no end', st.daysLeft ?? '', STATE_WORDS[st.state], s.unlocks ?? 0, p?.amount ?? '', p?.paidOn ?? '', paidIn(s, `${t.slice(0, 4)}-01-01`, t), s.notes, s.archived ? 'yes' : ''];
+    return [s.name, shopIdText(s.code), s.vat, s.contact, s.phone, s.city, s.plan, s.branches ?? 'no limit', s.pos ?? 'no limit', s.users ?? 'no limit', (s.features ?? []).join(' '), s.expires ?? 'no end', st.daysLeft ?? '', STATE_WORDS[st.state], s.unlocks ?? 0, p?.amount ?? '', p?.paidOn ?? '', paidIn(s, `${t.slice(0, 4)}-01-01`, t), s.notes, s.archived ? 'yes' : '', state.health[s.code]?.report?.app?.version ?? '', state.health[s.code]?.at?.slice(0, 10) ?? '', warningsOf(s).map((w) => w.text).join('; ')];
   });
   const cell = (x) => { const v = String(x ?? ''); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
   const csv = '﻿' + [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
@@ -814,7 +929,7 @@ document.addEventListener('click', async (e) => {
   else if (act === 'lock') { state.register = null; state.password = null; store.set('licences.password', null); closeDrawer(); render(); }
   else if (act === 'refresh') {
     b.disabled = true;
-    try { state.register = await loadRegister(); render(); toast('Up to date'); } catch (ex) { alert(ex.message); b.disabled = false; }
+    try { state.register = await loadRegister(); render(); toast('Up to date'); refreshHealth(); } catch (ex) { alert(ex.message); b.disabled = false; }
   }
 });
 document.addEventListener('input', (e) => {
@@ -835,6 +950,7 @@ document.addEventListener('keydown', (e) => {
     try { state.register = await loadRegister(); } catch { state.password = null; }
   }
   render();
+  refreshHealth();
 })();
 </script>
 </body>

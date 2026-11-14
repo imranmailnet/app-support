@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "server": {
+    "version": "0.1.502",
+    "run": 502,
+    "file": "VeneziaERP-Server-Setup-0.1.502.exe",
+    "url": "https://github.com/imranmailnet/app-support/releases/download/server-0.1.502/VeneziaERP-Server-Setup-0.1.502.exe",
+    "size": 309189404,
+    "sha256": "52967f951ec3f56be254a57a3b104aa67c9c2ddb963b34ab959d5dfa1d5d3fee",
+    "signature": "9bc7482f943deee02cf393b062c8836333ae51f15b8e2c43492d5058f79daf791dcf9289d107c070ff63cfd913bcb7e2de530804f0a907a74c79596f69434406",
+    "date": "2026-11-14T20:24:16.137Z",
+    "notesUrl": "https://github.com/imranmailnet/app-support/releases/download/server-0.1.502/whats-new.json"
+  },
+  "android": {
+    "version": "0.1.419",
+    "run": 419,
+    "file": "VeneziaERP-Mobile-0.1.419.apk",
+    "url": "https://github.com/imranmailnet/app-support/releases/download/android-0.1.419/VeneziaERP-Mobile-0.1.419.apk",
+    "size": 7098843,
+    "sha256": "4f02f16042a3787e08e1361f534d7464978d09f648ef1a113b1f8dff7dddb415",
+    "date": "2026-11-14T20:24:16.137Z"
+  }
+}

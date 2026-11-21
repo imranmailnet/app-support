@@ -1,23 +1,23 @@
 {
   "v": 1,
   "server": {
-    "version": "0.1.530",
-    "run": 530,
-    "file": "VeneziaERP-Server-Setup-0.1.530.exe",
-    "url": "https://github.com/imranmailnet/app-support/releases/download/server-0.1.530/VeneziaERP-Server-Setup-0.1.530.exe",
-    "size": 309366579,
-    "sha256": "12494ac2aaf47fc2d1d4fb7ab306b1ff44da6bd933f358909bfa4d3dad8c00f6",
-    "signature": "528d0f0f5420b71e3f207a4a760f59a8e99beb4c56a60c8cfbcdedf6af657fd28f74ae72618bdf5ab62de20f682b3c0b9ae9b9624527ca3b09f4527c5fd3fa06",
-    "date": "2026-11-16T16:29:29.337Z",
-    "notesUrl": "https://github.com/imranmailnet/app-support/releases/download/server-0.1.530/whats-new.json"
+    "version": "0.1.580",
+    "run": 580,
+    "file": "VeneziaERP-Server-Setup-0.1.580.exe",
+    "url": "https://github.com/imranmailnet/app-support/releases/download/server-0.1.580/VeneziaERP-Server-Setup-0.1.580.exe",
+    "size": 391126614,
+    "sha256": "7138c649ffdc83928831d202d92e118b61fe117aaf4aef76a68be436c382cca6",
+    "signature": "2f7c4e03de61b91ca1d54686c795a7a1530e4fb9a98e44584db24958b3584fa7bf651c5b9996048c00b870cbe34ee880a4fc2c102c1da889a51bdda652262a01",
+    "date": "2026-11-21T11:44:19.593Z",
+    "notesUrl": "https://github.com/imranmailnet/app-support/releases/download/server-0.1.580/whats-new.json"
   },
   "android": {
-    "version": "0.1.445",
-    "run": 445,
-    "file": "VeneziaERP-Mobile-0.1.445.apk",
-    "url": "https://github.com/imranmailnet/app-support/releases/download/android-0.1.445/VeneziaERP-Mobile-0.1.445.apk",
-    "size": 7171760,
-    "sha256": "1a2e631371ad420a63922a35f95242c3d23b1391fdfd57cfc5eefec919a27117",
-    "date": "2026-11-16T16:29:29.337Z"
+    "version": "0.1.492",
+    "run": 492,
+    "file": "VeneziaERP-Mobile-0.1.492.apk",
+    "url": "https://github.com/imranmailnet/app-support/releases/download/android-0.1.492/VeneziaERP-Mobile-0.1.492.apk",
+    "size": 7301346,
+    "sha256": "73410f592b46a0a4f38075f496a98d01104ddc2a2ee45759f18a6abe0209f814",
+    "date": "2026-11-21T11:44:19.593Z"
   }
 }
